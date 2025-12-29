@@ -1,9 +1,0 @@
-node_modules
-.svelte-kit
-build
-.env
-.npmrc
-wrangler.jsonc
-Dockerfile
-.dockerignore
-fly.toml
