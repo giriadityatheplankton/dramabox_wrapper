@@ -1,5 +1,5 @@
 {
-  "name": "dashboard",
+  "name": "dramabox-wrapper",
   "compatibility_date": "2025-12-29",
   "assets": {
     "directory": ".svelte-kit/cloudflare"
