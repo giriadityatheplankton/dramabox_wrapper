@@ -1,42 +1,25 @@
 <script lang="ts">
-    interface TagV3 {
-        tagId: number;
-        tagName: string;
-        tagEnName: string;
-    }
+    import type { UnifiedBook } from "$lib/types/book";
 
-    interface Book {
-        bookId: string;
-        bookName: string;
-        coverWap?: string;
-        cover?: string;
-        chapterCount: number;
-        introduction: string;
-        tags: string[];
-        tagV3s: TagV3[];
-        playCount: string;
-        shelfTime: string;
-    }
-
-    let { book }: { book: Book } = $props();
+    let { book }: { book: UnifiedBook } = $props();
 </script>
 
-<a href="/book/{book.bookId}" class="card">
+<a href="/book/{book.id}" class="card">
     <div class="card-image">
-        <img src={book.coverWap || book.cover} alt={book.bookName} loading="lazy" />
+        <img src={book.cover} alt={book.name} loading="lazy" />
         <div class="overlay">
             <span class="play-count">▶ {book.playCount}</span>
         </div>
     </div>
     <div class="card-content">
-        <h3 class="title">{book.bookName}</h3>
+        <h3 class="title">{book.name}</h3>
         <div class="tags">
             {#each (book.tags || []).slice(0, 3) as tag}
                 <span class="tag">{tag}</span>
             {/each}
         </div>
         <p class="intro">
-            {(book.introduction || '').slice(0, 80)}...
+            {(book.introduction || "").slice(0, 80)}...
         </p>
     </div>
 </a>
@@ -46,7 +29,9 @@
         background: var(--surface-color);
         border-radius: var(--card-radius);
         overflow: hidden;
-        transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+        transition:
+            transform var(--transition-speed) ease,
+            box-shadow var(--transition-speed) ease;
         border: 1px solid rgba(255, 255, 255, 0.05);
         display: flex;
         flex-direction: column;
@@ -83,7 +68,7 @@
         left: 0;
         right: 0;
         padding: 1rem;
-        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
         display: flex;
         align-items: flex-end;
     }

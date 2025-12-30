@@ -1,5 +1,5 @@
 <script lang="ts">
-    import BookCard from '$lib/components/BookCard.svelte';
+    import BookCard from "$lib/components/BookCard.svelte";
     let { data } = $props();
 </script>
 
@@ -14,7 +14,7 @@
     </header>
 
     <div class="grid">
-        {#each data.books as book (book.bookId)}
+        {#each data.books as book (book.id)}
             <BookCard {book} />
         {/each}
     </div>
@@ -33,7 +33,7 @@
     h1 {
         font-size: 2.5rem;
         margin-bottom: 0.5rem;
-        background: linear-gradient(to right, #F54E96, #ff8ba7);
+        background: linear-gradient(to right, #f54e96, #ff8ba7);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }

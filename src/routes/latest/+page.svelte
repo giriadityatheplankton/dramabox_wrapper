@@ -1,5 +1,5 @@
 <script lang="ts">
-    import BookCard from '$lib/components/BookCard.svelte';
+    import BookCard from "$lib/components/BookCard.svelte";
     let { data } = $props();
 </script>
 
@@ -14,7 +14,7 @@
     </header>
 
     <div class="grid">
-        {#each data.books as book (book.bookId)}
+        {#each data.books as book (book.id)}
             <BookCard {book} />
         {/each}
     </div>

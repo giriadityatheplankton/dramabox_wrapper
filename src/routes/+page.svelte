@@ -1,6 +1,7 @@
 <script lang="ts">
-    import BookCard from '$lib/components/BookCard.svelte';
-    let { data } = $props();
+    import BookCard from "$lib/components/BookCard.svelte";
+    import type { HomeSection } from "$lib/types/book";
+    let { data }: { data: { sections: HomeSection[] } } = $props();
 </script>
 
 <svelte:head>
@@ -9,15 +10,20 @@
 
 <div class="container dashboard">
     <header class="header">
-        <h1>For You</h1>
-        <p class="subtitle">Trending dramas selected for you</p>
+        <h1>Dashboard</h1>
+        <p class="subtitle">Drama Universe</p>
     </header>
 
-    <div class="grid">
-        {#each data.books as book (book.bookId)}
-            <BookCard {book} />
-        {/each}
-    </div>
+    {#each data.sections as section}
+        <section class="home-section">
+            <h2 class="section-title">{section.title}</h2>
+            <div class="grid">
+                {#each section.books as book (book.id)}
+                    <BookCard {book} />
+                {/each}
+            </div>
+        </section>
+    {/each}
 </div>
 
 <style>
@@ -36,6 +42,10 @@
         background: linear-gradient(to right, #fff, #aaa);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+    }
+
+    .section-title {
+        margin-bottom: 1rem;
     }
 
     .subtitle {
