@@ -48,7 +48,11 @@ export async function fetchHomeSections(customFetch: any): Promise<HomeSection[]
         ]);
 
         // Dramabox section
-        const dbBooks = (Array.isArray(dbRes) ? dbRes : (dbRes?.data || [])).map(normalizeDramabox);
+        const rawDbBooks = Array.isArray(dbRes) ? dbRes : (dbRes?.data || []);
+        const dbBooks = rawDbBooks
+            .filter((item: any) => item.bookId)
+            .map(normalizeDramabox);
+
         if (dbBooks.length > 0) {
             sections.push({
                 title: 'Dramabox - For You',
@@ -59,7 +63,9 @@ export async function fetchHomeSections(customFetch: any): Promise<HomeSection[]
         // Netshort sections
         if (nsRes && Array.isArray(nsRes)) {
             nsRes.forEach((group: any) => {
-                const books = (group.contentInfos || []).map(normalizeNetshort);
+                const books = (group.contentInfos || [])
+                    .filter((item: any) => item.shortPlayId)
+                    .map(normalizeNetshort);
                 if (books.length > 0) {
                     sections.push({
                         title: `Netshort - ${group.contentName}`,
@@ -133,8 +139,12 @@ export async function searchBooks(customFetch: any, query: string): Promise<Unif
             customFetch(`${NS_BASE}/search?query=${query}`).then((r: Response) => r.ok ? r.json() : { searchCodeSearchResult: [] })
         ]);
 
-        const dbBooks = (Array.isArray(dbRes) ? dbRes : (dbRes.data || [])).map(normalizeDramabox);
-        const nsBooks = (nsRes.searchCodeSearchResult || []).map(normalizeNetshort);
+        const dbBooks = (Array.isArray(dbRes) ? dbRes : (dbRes.data || []))
+            .filter((item: any) => item.bookId)
+            .map(normalizeDramabox);
+        const nsBooks = (nsRes.searchCodeSearchResult || [])
+            .filter((item: any) => item.shortPlayId)
+            .map(normalizeNetshort);
 
         return [...dbBooks, ...nsBooks];
     } catch (e) {
@@ -146,7 +156,9 @@ export async function searchBooks(customFetch: any, query: string): Promise<Unif
 export async function fetchLatestBooks(customFetch: any): Promise<UnifiedBook[]> {
     try {
         const res = await customFetch(`${DB_BASE}/latest`).then((r: Response) => r.json());
-        return (Array.isArray(res) ? res : (res?.data || [])).map(normalizeDramabox);
+        return (Array.isArray(res) ? res : (res?.data || []))
+            .filter((item: any) => item.bookId)
+            .map(normalizeDramabox);
     } catch (e) {
         console.error('Fetch latest failed:', e);
         return [];
@@ -156,7 +168,9 @@ export async function fetchLatestBooks(customFetch: any): Promise<UnifiedBook[]>
 export async function fetchTrendingBooks(customFetch: any): Promise<UnifiedBook[]> {
     try {
         const res = await customFetch(`${DB_BASE}/trending`).then((r: Response) => r.json());
-        return (Array.isArray(res) ? res : (res?.data || [])).map(normalizeDramabox);
+        return (Array.isArray(res) ? res : (res?.data || []))
+            .filter((item: any) => item.bookId)
+            .map(normalizeDramabox);
     } catch (e) {
         console.error('Fetch trending failed:', e);
         return [];
@@ -169,7 +183,9 @@ export async function fetchVipContent(customFetch: any): Promise<any> {
         const data = res?.data || res;
         return (data.columnVoList || []).map((col: any) => ({
             ...col,
-            bookList: (col.bookList || []).map(normalizeDramabox)
+            bookList: (col.bookList || [])
+                .filter((item: any) => item.bookId)
+                .map(normalizeDramabox)
         }));
     } catch (e) {
         console.error('Fetch VIP failed:', e);

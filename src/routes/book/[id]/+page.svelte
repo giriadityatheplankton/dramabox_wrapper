@@ -299,6 +299,7 @@
         color: var(--text-secondary);
         font-weight: 500;
         transition: color 0.2s;
+        margin-left: 1rem;
     }
 
     .back-btn:hover {

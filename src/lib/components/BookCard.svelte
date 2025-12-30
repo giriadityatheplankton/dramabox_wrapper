@@ -4,25 +4,49 @@
     let { book }: { book: UnifiedBook } = $props();
 </script>
 
-<a href="/book/{book.id}" class="card">
-    <div class="card-image">
-        <img src={book.cover} alt={book.name} loading="lazy" />
-        <div class="overlay">
-            <span class="play-count">▶ {book.playCount}</span>
+<div class="card-container" class:coming-soon={book.status === "coming_soon"}>
+    {#if book.status === "coming_soon"}
+        <div class="card disabled">
+            <div class="card-image">
+                <img src={book.cover} alt={book.name} loading="lazy" />
+                <div class="coming-soon-overlay">
+                    <span class="coming-soon-text">Coming Soon</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <h3 class="title">{book.name}</h3>
+                <div class="tags">
+                    {#each (book.tags || []).slice(0, 3) as tag}
+                        <span class="tag">{tag}</span>
+                    {/each}
+                </div>
+                <p class="intro">
+                    {(book.introduction || "").slice(0, 80)}...
+                </p>
+            </div>
         </div>
-    </div>
-    <div class="card-content">
-        <h3 class="title">{book.name}</h3>
-        <div class="tags">
-            {#each (book.tags || []).slice(0, 3) as tag}
-                <span class="tag">{tag}</span>
-            {/each}
-        </div>
-        <p class="intro">
-            {(book.introduction || "").slice(0, 80)}...
-        </p>
-    </div>
-</a>
+    {:else}
+        <a href="/book/{book.id}" class="card">
+            <div class="card-image">
+                <img src={book.cover} alt={book.name} loading="lazy" />
+                <div class="overlay">
+                    <span class="play-count">▶ {book.playCount}</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <h3 class="title">{book.name}</h3>
+                <div class="tags">
+                    {#each (book.tags || []).slice(0, 3) as tag}
+                        <span class="tag">{tag}</span>
+                    {/each}
+                </div>
+                <p class="intro">
+                    {(book.introduction || "").slice(0, 80)}...
+                </p>
+            </div>
+        </a>
+    {/if}
+</div>
 
 <style>
     .card {
@@ -125,5 +149,52 @@
         -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
+    }
+
+    .card-container.coming-soon {
+        cursor: not-allowed;
+    }
+
+    .card.disabled {
+        opacity: 0.7;
+        filter: grayscale(0.5);
+    }
+
+    .coming-soon-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(2px);
+    }
+
+    .coming-soon-text {
+        color: white;
+        font-weight: 700;
+        font-size: 1.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        padding: 0.5rem 1rem;
+        border: 2px solid white;
+        border-radius: 4px;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 0.8;
+        }
+        50% {
+            transform: scale(1.05);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 0.8;
+        }
     }
 </style>
