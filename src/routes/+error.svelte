@@ -29,13 +29,8 @@
 </div>
 
 <style>
-    :global(body) {
-        margin: 0;
-        background: #050505;
-        overflow: hidden;
-    }
-
     .error-container {
+        background: #050505;
         position: fixed;
         top: 0;
         left: 0;
