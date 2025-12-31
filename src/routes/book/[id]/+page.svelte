@@ -20,8 +20,30 @@
         activeEpisode = null;
     }
 
+    let currentIndex = $derived(
+        activeEpisode
+            ? data.episodes.findIndex((e) => e.id === activeEpisode?.id)
+            : -1,
+    );
+
+    function goToNext() {
+        if (currentIndex < data.episodes.length - 1) {
+            playEpisode(data.episodes[currentIndex + 1]);
+        }
+    }
+
+    function goToPrev() {
+        if (currentIndex > 0) {
+            playEpisode(data.episodes[currentIndex - 1]);
+        }
+    }
+
     function handleKeydown(e: KeyboardEvent) {
         if (e.key === "Escape") closePlayer();
+        if (activeEpisode) {
+            if (e.key === "ArrowRight") goToNext();
+            if (e.key === "ArrowLeft") goToPrev();
+        }
     }
 </script>
 
@@ -106,6 +128,24 @@
                 <h3>
                     Episode {activeEpisode.no}
                 </h3>
+                <div class="player-nav">
+                    <button
+                        class="nav-btn"
+                        onclick={goToPrev}
+                        disabled={currentIndex === 0}
+                        title="Previous (Arrow Left)"
+                    >
+                        <span>&laquo;</span> Prev
+                    </button>
+                    <button
+                        class="nav-btn"
+                        onclick={goToNext}
+                        disabled={currentIndex === data.episodes.length - 1}
+                        title="Next (Arrow Right)"
+                    >
+                        Next <span>&raquo;</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -383,6 +423,44 @@
 
     .modal-info h3 {
         margin: 0;
+        font-size: 1.25rem;
+    }
+
+    .player-nav {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .nav-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: rgba(245, 78, 150, 0.1);
+        border: 1px solid rgba(245, 78, 150, 0.3);
+        color: #f54e96;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+        background: rgba(245, 78, 150, 0.2);
+        border-color: #f54e96;
+    }
+
+    .nav-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-secondary);
+    }
+
+    .nav-btn span {
         font-size: 1.25rem;
     }
 

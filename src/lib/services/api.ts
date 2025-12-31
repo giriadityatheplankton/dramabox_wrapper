@@ -103,7 +103,7 @@ export async function fetchBookDetail(customFetch: any, id: string): Promise<{ b
                 }
             }
             return {
-                id: String(ep.episodeId),
+                id: String(ep.episodeId || ep.chapterId || ep.chapterIndex || index),
                 no: ep.episodeNo || ep.orderNo || ep.episode_no || ep.no || (index + 1),
                 name: ep.episodeName,
                 cover: ep.episodeCover,
