@@ -25,6 +25,19 @@ export function normalizeDramabox(book: any): UnifiedBook {
 }
 
 export function normalizeNetshort(item: any): UnifiedBook {
+    if (!item) {
+        return {
+            id: 'unknown',
+            originalId: '',
+            source: 'ns',
+            name: 'Unknown Title',
+            cover: '',
+            introduction: '',
+            tags: [],
+            playCount: '',
+            chapterCount: 0
+        };
+    }
     return {
         id: `ns-${item.shortPlayId}`,
         originalId: String(item.shortPlayId),
@@ -116,7 +129,14 @@ export async function fetchBookDetail(customFetch: any, id: string): Promise<{ b
             episodes
         };
     } else {
-        const res = await customFetch(`${NS_BASE}/allepisode?shortPlayId=${cleanId}`).then((r: Response) => r.json());
+        const res = await customFetch(`${NS_BASE}/allepisode?shortPlayId=${cleanId}`).then((r: Response) => r.ok ? r.json() : null);
+
+        if (!res) {
+            return {
+                book: normalizeNetshort(null),
+                episodes: []
+            };
+        }
 
         const episodes = (res.shortPlayEpisodeInfos || []).map((ep: any) => ({
             id: String(ep.episodeId),
