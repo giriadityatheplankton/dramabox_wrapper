@@ -1,15 +1,33 @@
 <script lang="ts">
     import { page } from "$app/stores";
     import type { UnifiedBook, UnifiedEpisode } from "$lib/types/book";
+    import { fetchMeloloStream, isMelolo } from "$lib/services/api";
 
     let { data }: { data: { book: UnifiedBook; episodes: UnifiedEpisode[] } } =
         $props();
     let book = $derived(data.book);
 
     let activeEpisode = $state<UnifiedEpisode | null>(null);
+    let isLoadingStream = $state(false);
 
-    function playEpisode(episode: UnifiedEpisode) {
-        if (episode.videoUrl) {
+    async function playEpisode(episode: UnifiedEpisode) {
+        if (isMelolo(book.id) && !episode.videoUrl) {
+            isLoadingStream = true;
+            try {
+                const streamUrl = await fetchMeloloStream(fetch, episode.id);
+                if (streamUrl) {
+                    episode.videoUrl = streamUrl;
+                    activeEpisode = episode;
+                } else {
+                    alert("Failed to fetch Melolo video stream");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error fetching stream");
+            } finally {
+                isLoadingStream = false;
+            }
+        } else if (episode.videoUrl) {
             activeEpisode = episode;
         } else {
             alert("Video not available for this episode");
@@ -148,6 +166,13 @@
                 </div>
             </div>
         </div>
+    </div>
+{/if}
+
+{#if isLoadingStream}
+    <div class="loading-overlay">
+        <div class="loader"></div>
+        <p>Preparing video stream...</p>
     </div>
 {/if}
 
@@ -470,6 +495,41 @@
         }
         .modal-backdrop {
             padding: 1rem;
+        }
+    }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .loader {
+        width: 48px;
+        height: 48px;
+        border: 5px solid #fff;
+        border-bottom-color: #f54e96;
+        border-radius: 50%;
+        display: inline-block;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
         }
     }
 </style>

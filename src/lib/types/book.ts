@@ -1,4 +1,4 @@
-export type SourceType = 'db' | 'ns';
+export type SourceType = 'db' | 'ns' | 'ml';
 
 export interface UnifiedBook {
     id: string; // Prefixed ID (e.g. 'ns-123')
