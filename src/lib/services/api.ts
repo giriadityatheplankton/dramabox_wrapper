@@ -428,3 +428,39 @@ export async function fetchMeloloStream(customFetch: any, videoId: string): Prom
         return '';
     }
 }
+
+let warmerStarted = false;
+export function startCacheWarmer() {
+    if (typeof window !== 'undefined' || warmerStarted) return;
+    warmerStarted = true;
+
+    console.log('[CACHE WARMER] Starting background worker (Interval: 9 mins)');
+
+    const warm = async () => {
+        console.log('[CACHE WARMER] Running proactive refresh...');
+        try {
+            // Using a dummy fetch since these functions use the injected customFetch
+            // In a real SvelteKit server environment, global fetch is available
+            await Promise.allSettled([
+                fetchHomeSections(fetch),
+                fetchLatestBooks(fetch),
+                fetchTrendingBooks(fetch),
+                fetchVipContent(fetch)
+            ]);
+            console.log('[CACHE WARMER] Proactive refresh complete.');
+        } catch (e) {
+            console.error('[CACHE WARMER] Refresh failed:', e);
+        }
+    };
+
+    // Initial warm
+    warm();
+
+    // Schedule every 9 minutes
+    setInterval(warm, 9 * 60 * 1000);
+}
+
+// Automatically start warmer on server-side
+if (typeof window === 'undefined') {
+    startCacheWarmer();
+}
