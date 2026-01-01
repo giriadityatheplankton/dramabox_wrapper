@@ -165,9 +165,13 @@ export async function fetchHomeSections(customFetch: any): Promise<HomeSection[]
         // Netshort sections
         if (nsRes && Array.isArray(nsRes)) {
             nsRes.forEach((group: any) => {
+                const isComingSoon = group.contentRemark === 'coming_soon';
                 const books = (group.contentInfos || [])
                     .filter((item: any) => item.shortPlayId)
-                    .map(normalizeNetshort);
+                    .map((item: any) => ({
+                        ...normalizeNetshort(item),
+                        status: isComingSoon ? 'coming_soon' : undefined
+                    }));
                 if (books.length > 0) {
                     sections.push({
                         title: `Netshort - ${group.contentName}`,
@@ -263,10 +267,21 @@ export async function fetchBookDetail(customFetch: any, id: string): Promise<{ b
         const res = await customFetch(`${NS_BASE}/allepisode?shortPlayId=${cleanId}`).then((r: Response) => r.ok ? r.json() : null);
 
         if (!res) {
-            return {
-                book: normalizeNetshort(null),
+            const result = {
+                book: {
+                    id: id,
+                    originalId: cleanId,
+                    source: 'ns' as const,
+                    name: 'Coming Soon / Not Available',
+                    cover: '',
+                    introduction: 'This content is not yet available or has been removed from Netshort.',
+                    tags: [],
+                    status: 'coming_soon'
+                },
                 episodes: []
             };
+            apiCache.set(cacheKey, result);
+            return result;
         }
 
         const episodes = (res.shortPlayEpisodeInfos || []).map((ep: any) => ({
