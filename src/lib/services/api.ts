@@ -43,6 +43,15 @@ function stripHtml(text: string): string {
     return (text || "").replace(/<\/?[^>]+(>|$)/g, "");
 }
 
+function shuffleArray<T>(array: T[]): T[] {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
 function getProxiedImage(url: string | undefined): string {
     if (!url) return '';
     if (url.includes('.heic')) {
@@ -137,7 +146,7 @@ export function normalizeMelolo(item: any): UnifiedBook {
 export async function fetchHomeSections(customFetch: any): Promise<HomeSection[]> {
     const cacheKey = 'home_sections';
     const cached = apiCache.get(cacheKey);
-    if (cached) return cached;
+    if (cached) return shuffleArray(cached);
 
     const sections: HomeSection[] = [];
 
@@ -208,6 +217,7 @@ export async function fetchHomeSections(customFetch: any): Promise<HomeSection[]
 
     if (sections.length > 0) {
         apiCache.set(cacheKey, sections);
+        return shuffleArray(sections);
     }
     return sections;
 }
