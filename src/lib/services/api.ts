@@ -5,6 +5,32 @@ const NS_BASE = 'https://netshort.sansekai.my.id/api/netshort';
 const ML_BASE = 'https://api.sansekai.my.id/api/melolo';
 const ML_STREAM_BASE = 'https://api.sansekai.my.id/api/melolo/stream';
 
+class InMemoryCache {
+    private cache: Map<string, { data: any; expiry: number }> = new Map();
+    private duration: number = 10 * 60 * 1000; // 10 minutes
+
+    get(key: string): any {
+        const item = this.cache.get(key);
+        if (!item) return null;
+        if (Date.now() > item.expiry) {
+            this.cache.delete(key);
+            return null;
+        }
+        console.log(`[CACHE HIT] ${key}`);
+        return item.data;
+    }
+
+    set(key: string, data: any): void {
+        console.log(`[CACHE MISS] Setting ${key}`);
+        this.cache.set(key, {
+            data,
+            expiry: Date.now() + this.duration
+        });
+    }
+}
+
+const apiCache = new InMemoryCache();
+
 export const isNetshort = (id: string) => id.startsWith('ns-');
 export const isMelolo = (id: string) => id.startsWith('ml-');
 export const getCleanId = (id: string) => {
@@ -109,6 +135,10 @@ export function normalizeMelolo(item: any): UnifiedBook {
 }
 
 export async function fetchHomeSections(customFetch: any): Promise<HomeSection[]> {
+    const cacheKey = 'home_sections';
+    const cached = apiCache.get(cacheKey);
+    if (cached) return cached;
+
     const sections: HomeSection[] = [];
 
     try {
@@ -172,10 +202,17 @@ export async function fetchHomeSections(customFetch: any): Promise<HomeSection[]
         console.error('Fetch home failed:', e);
     }
 
+    if (sections.length > 0) {
+        apiCache.set(cacheKey, sections);
+    }
     return sections;
 }
 
 export async function fetchBookDetail(customFetch: any, id: string): Promise<{ book: UnifiedBook, episodes: UnifiedEpisode[] }> {
+    const cacheKey = `book_detail_${id}`;
+    const cached = apiCache.get(cacheKey);
+    if (cached) return cached;
+
     const cleanId = getCleanId(id);
 
     if (isMelolo(id)) {
@@ -212,10 +249,12 @@ export async function fetchBookDetail(customFetch: any, id: string): Promise<{ b
                 videoUrl: '' // Fetched on demand
             }));
 
-            return {
+            const result = {
                 book: normalizeMelolo(data),
                 episodes
             };
+            apiCache.set(cacheKey, result);
+            return result;
         } catch (e) {
             console.error('Fetch Melolo detail failed:', e);
             throw e;
@@ -237,10 +276,12 @@ export async function fetchBookDetail(customFetch: any, id: string): Promise<{ b
             videoUrl: ep.playVoucher || ''
         }));
 
-        return {
+        const result = {
             book: normalizeNetshort(res),
             episodes
         };
+        apiCache.set(cacheKey, result);
+        return result;
     } else {
         // Dramabox
         const [detailRes, episodesRes] = await Promise.all([
@@ -268,10 +309,12 @@ export async function fetchBookDetail(customFetch: any, id: string): Promise<{ b
             };
         });
 
-        return {
+        const result = {
             book: normalizeDramabox(detail),
             episodes
         };
+        apiCache.set(cacheKey, result);
+        return result;
     }
 }
 
@@ -303,11 +346,18 @@ export async function searchBooks(customFetch: any, query: string): Promise<Unif
 }
 
 export async function fetchLatestBooks(customFetch: any): Promise<UnifiedBook[]> {
+    const cacheKey = 'latest_books';
+    const cached = apiCache.get(cacheKey);
+    if (cached) return cached;
+
     try {
         const res = await customFetch(`${DB_BASE}/latest`).then((r: Response) => r.json());
-        return (Array.isArray(res) ? res : (res?.data || []))
+        const result = (Array.isArray(res) ? res : (res?.data || []))
             .filter((item: any) => item.bookId)
             .map(normalizeDramabox);
+
+        if (result.length > 0) apiCache.set(cacheKey, result);
+        return result;
     } catch (e) {
         console.error('Fetch latest failed:', e);
         return [];
@@ -315,11 +365,18 @@ export async function fetchLatestBooks(customFetch: any): Promise<UnifiedBook[]>
 }
 
 export async function fetchTrendingBooks(customFetch: any): Promise<UnifiedBook[]> {
+    const cacheKey = 'trending_books';
+    const cached = apiCache.get(cacheKey);
+    if (cached) return cached;
+
     try {
         const res = await customFetch(`${DB_BASE}/trending`).then((r: Response) => r.json());
-        return (Array.isArray(res) ? res : (res?.data || []))
+        const result = (Array.isArray(res) ? res : (res?.data || []))
             .filter((item: any) => item.bookId)
             .map(normalizeDramabox);
+
+        if (result.length > 0) apiCache.set(cacheKey, result);
+        return result;
     } catch (e) {
         console.error('Fetch trending failed:', e);
         return [];
@@ -327,15 +384,22 @@ export async function fetchTrendingBooks(customFetch: any): Promise<UnifiedBook[
 }
 
 export async function fetchVipContent(customFetch: any): Promise<any> {
+    const cacheKey = 'vip_content';
+    const cached = apiCache.get(cacheKey);
+    if (cached) return cached;
+
     try {
         const res = await customFetch(`${DB_BASE}/vip`).then((r: Response) => r.json());
         const data = res?.data || res;
-        return (data.columnVoList || []).map((col: any) => ({
+        const result = (data.columnVoList || []).map((col: any) => ({
             ...col,
             bookList: (col.bookList || [])
                 .filter((item: any) => item.bookId)
                 .map(normalizeDramabox)
         }));
+
+        if (result.length > 0) apiCache.set(cacheKey, result);
+        return result;
     } catch (e) {
         console.error('Fetch VIP failed:', e);
         return [];
